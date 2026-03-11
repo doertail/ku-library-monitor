@@ -1,0 +1,5 @@
+.env
+seen_ids.json
+monitor.log
+__pycache__/
+*.pyc
