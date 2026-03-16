@@ -22,7 +22,7 @@ def fetch_notices() -> list[dict]:
     soup = BeautifulSoup(resp.text, "html.parser")
 
     notices = []
-    table = soup.select_one("table.kboard-list-table")
+    table = soup.select_one("table.table")
     if not table:
         print("공지 테이블을 찾을 수 없습니다.")
         return notices
@@ -34,7 +34,7 @@ def fetch_notices() -> list[dict]:
         title = a_tag.get_text(strip=True)
         href = a_tag.get("href", "")
         # Extract numeric post ID from URL
-        match = re.search(r"/(\d+)/?$", href) or re.search(r"[?&](?:no|id|idx)=(\d+)", href)
+        match = re.search(r"/(\d+)/?$", href) or re.search(r"[?&](?:no|uid|id|idx)=(\d+)", href)
         if not match:
             continue
         post_id = match.group(1)
