@@ -1,5 +1,6 @@
 .env
 seen_ids.json
+seen_ids_grw.json
 monitor.log
 __pycache__/
 *.pyc
