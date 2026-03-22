@@ -4,3 +4,5 @@ seen_ids_grw.json
 monitor.log
 __pycache__/
 *.pyc
+seen_ids_grw.json.bak
+run_all.log
