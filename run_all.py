@@ -61,13 +61,7 @@ if __name__ == "__main__":
     results = {}
 
     print("\n[1/3] 도서관 공지")
-    try:
-        library_main()
-        results["도서관"] = "OK"
-    except Exception as e:
-        short_err = str(e).split("\n")[0][:80]
-        print(f"  ✗ 실패: {short_err}")
-        results["도서관"] = "FAIL"
+    results["도서관"] = "OK" if run_with_retry("도서관", library_main) else "FAIL"
 
     print("\n[2/3] 그룹웨어 공지")
     results["그룹웨어"] = "OK" if run_with_retry("그룹웨어", grw_main) else "FAIL"
@@ -77,9 +71,16 @@ if __name__ == "__main__":
 
     print()
     print("-" * 55)
+    failed = []
     for name, status in results.items():
         mark = "✓" if status == "OK" else "✗"
         print(f"  {mark} {name}: {status}")
+        if status == "FAIL":
+            failed.append(name)
     print(f"  완료: {datetime.now().strftime('%H:%M:%S')}")
     print("=" * 55)
     print()
+
+    # 전체 실패 시 알림
+    if failed:
+        send_error_alert(f"다음 모니터 실패: {', '.join(failed)}")
