@@ -1,12 +1,17 @@
 import os
 import time
+import warnings
 from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
 
-from monitor import main as library_main
-from monitor_grw import main as grw_main
+# urllib3 / LibreSSL 경고 억제
+warnings.filterwarnings("ignore")
+
+from monitors.library import main as library_main
+from monitors.groupware import main as grw_main
+from monitors.everytime import main as et_main
 
 load_dotenv()
 
@@ -29,18 +34,52 @@ def send_error_alert(message: str) -> None:
         pass
 
 
-if __name__ == "__main__":
-    library_main()
-
+def run_with_retry(name: str, fn) -> bool:
+    """fn 실행, 실패 시 MAX_RETRIES회 재시도. 성공 True, 최종 실패 False."""
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            grw_main()
-            break
+            fn()
+            return True
         except Exception as e:
-            print(f"그룹웨어 실패 ({attempt}/{MAX_RETRIES}): {e}")
+            short_err = str(e).split("\n")[0][:120]
+            print(f"  ✗ 실패 ({attempt}/{MAX_RETRIES}): {short_err}")
             if attempt < MAX_RETRIES:
-                print(f"{RETRY_DELAY}초 후 재시도...")
+                print(f"  → {RETRY_DELAY}초 후 재시도...")
                 time.sleep(RETRY_DELAY)
             else:
-                print("최대 재시도 횟수 초과 — 다음 cron 실행 시 재시도됩니다.")
-                send_error_alert(f"그룹웨어 공지 확인 {MAX_RETRIES}회 모두 실패\n오류: {e}")
+                send_error_alert(f"{name} 공지 확인 {MAX_RETRIES}회 모두 실패\n오류: {e}")
+    return False
+
+
+if __name__ == "__main__":
+    now = datetime.now()
+    print()
+    print("=" * 55)
+    print(f"  KU Monitor 실행  {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 55)
+
+    results = {}
+
+    print("\n[1/3] 도서관 공지")
+    try:
+        library_main()
+        results["도서관"] = "OK"
+    except Exception as e:
+        short_err = str(e).split("\n")[0][:80]
+        print(f"  ✗ 실패: {short_err}")
+        results["도서관"] = "FAIL"
+
+    print("\n[2/3] 그룹웨어 공지")
+    results["그룹웨어"] = "OK" if run_with_retry("그룹웨어", grw_main) else "FAIL"
+
+    print("\n[3/3] 에브리타임 공지")
+    results["에브리타임"] = "OK" if run_with_retry("에브리타임", et_main) else "FAIL"
+
+    print()
+    print("-" * 55)
+    for name, status in results.items():
+        mark = "✓" if status == "OK" else "✗"
+        print(f"  {mark} {name}: {status}")
+    print(f"  완료: {datetime.now().strftime('%H:%M:%S')}")
+    print("=" * 55)
+    print()

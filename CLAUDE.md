@@ -9,17 +9,18 @@
 ## 기술 스택
 
 - Python 3 + requests + BeautifulSoup4
-- Playwright (그룹웨어 SSO 로그인용)
+- Playwright (그룹웨어 SSO 로그인, 에브리타임 로그인용)
 - Discord Webhook (알림 전송)
-- `seen_ids.json` / `seen_ids_grw.json` (중복 방지 상태 저장)
+- `seen_ids.json` / `seen_ids_grw.json` / `seen_ids_et.json` (중복 방지 상태 저장)
 - `.env` (환경변수 관리)
 
 ## 실행
 
 ```bash
-python3 run_all.py       # 전체 실행 (도서관 + 그룹웨어)
-python3 monitor.py       # 도서관 공지만
-python3 monitor_grw.py   # 그룹웨어 공지만
+python3 run_all.py            # 전체 실행 (도서관 + 그룹웨어 + 에브리타임)
+python3 monitor.py            # 도서관 공지만
+python3 monitor_grw.py        # 그룹웨어 공지만
+python3 monitor_everytime.py  # 에브리타임 근장게시판만
 ```
 
 환경변수 필요 (`.env`):
@@ -27,6 +28,8 @@ python3 monitor_grw.py   # 그룹웨어 공지만
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 KU_PORTAL_ID=<포털 아이디>
 KU_PORTAL_PW=<포털 비밀번호>
+ET_ID=<에브리타임 아이디>
+ET_PW=<에브리타임 비밀번호>
 ```
 
 ## 핵심 로직
@@ -59,8 +62,10 @@ if KEYWORD in notice["title"] and "마감" not in notice["title"]:
 | `run_all.py` | 전체 실행 진입점 |
 | `monitor.py` | 도서관 공지 스크립트 |
 | `monitor_grw.py` | 그룹웨어 공지 스크립트 (Playwright) |
+| `monitor_everytime.py` | 에브리타임 근장게시판 스크립트 (Playwright) |
 | `seen_ids.json` | 도서관 처리 공지 ID 목록 |
 | `seen_ids_grw.json` | 그룹웨어 처리 공지 ID 목록 |
+| `seen_ids_et.json` | 에브리타임 처리 게시글 ID 목록 |
 | `.env` | 환경변수 (git 제외) |
 | `requirements.txt` | 의존성 목록 |
 
